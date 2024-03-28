@@ -23,7 +23,7 @@ Given a dataset with $((i_k, t_k), y_k)$ with $k = 1, 2, \cdots, n$ and the labe
 
 ### Definitions of In-Domain (ID) and Out-Of-Domain (OOD)
 - **In-domain**: given both measures $t_i$ from the images and $t_d$ from the dialogue, we say the image is in-domain with the dialogue if $s(t_i, t_d) \geq \lambda$. 
-- **Out-of-domain**: given both measures $t_i$ from the images and $t_d$ from the dialogue, we say the image is out-of-domain with the dialogue if $s(t_i, t_d) < \lambda$. 
+- **Out-of-domain**: given both measures $t_i$ from the images and $t_d$ from the dialogue, we say the image is out-of-domain with the dialogue if $s(t_i, t_d) \leq \lambda$. 
 
 With the above definition, given an image-text data pair $(I^d, T^d)$, we are going to examine whether it is ID or OOD per image-dialogue in the given label set $\mathcal{Y}$. To this end, we draw the overall workflow in the figure below.
 
