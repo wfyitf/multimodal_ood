@@ -22,11 +22,12 @@ This repo contains the materials for multi-modal OOD detection.
 
 ### Dataset Creation
 To create the datasets for QA and real OOD data, please follow the procedures listed below:
-1. \[For QA OOD data:\]
-2. \[For Real OOD data:\]
+1. \[For QA OOD data:\] Download [visdial dataset](https://visualdialog.org/data) and COCO2014 dataset(https://cocodataset.org/#home) and put them under `dataset/coco` and `dataset/visdial`, respectively.
+2. \[For Real OOD data:\] Download dataset from [MMD dataset](https://github.com/shh1574/multi-modal-dialogue-dataset/) with the [link](https://drive.google.com/drive/folders/12-Zz4MJTASJVlbncpSWvBVqLDe5_m5QU), also download COCO2014 dataset(https://cocodataset.org/#home) and put them under `dataset/mmd` and `dataset/coco`, respectively.
+3. \[For QA OOD data:\] Then run the notebook `qa_dataset_creation.ipynb` to create the QA dataset.
+4. \[For Real OOD data:\] Then run the notebook `mmd_dataset_creation.ipynb` to create the Real OOD dataset.
 
-
-### Example Viewing
+### Dataset Viewing
 To run the notebooks for examining the datasets, please follow the procedures listed below:
 1. Download the dataset for both qa and real OOD datasets from [this link](https://drive.google.com/drive/folders/1w4OO7s4HYhpimZiPhIv2JdWN6Pc0d8_S?usp=sharing).
 2. Put the data into `dataset/qaood` and `dataset/realood` and extract `sample.zip` for both datasets.
