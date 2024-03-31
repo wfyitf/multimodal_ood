@@ -18,6 +18,20 @@ This repo contains the materials for multi-modal OOD detection.
 └─── reports                 <- Generated analysis / reports 
 ```
 
+## Notebook Running
+
+### Dataset Creation
+To create the datasets for QA and real OOD data, please follow the procedures listed below:
+1. \[For QA OOD data:\]
+2. \[For Real OOD data:\]
+
+
+### Example Viewing
+To run the notebooks for examining the datasets, please follow the procedures listed below:
+1. Download the dataset for both qa and real OOD datasets from [this link](https://drive.google.com/drive/folders/1w4OO7s4HYhpimZiPhIv2JdWN6Pc0d8_S?usp=sharing).
+2. Put the data into `dataset/qaood` and `dataset/realood` and extract `sample.zip` for both datasets.
+3. To view the data, one may use `example_showing.ipynb` for viewing the examples.
+
 ## Project Description
 Given a dataset with $((i_k, t_k), y_k)$ with $k = 1, 2, \cdots, n$ and the label $y_k$, we could use the vision-language model to embed the image $i_k$ with the abstract feature $x_{i,k}$, and also we could embed the dialogues with another text embedding $x_{t,k}$. To classify the relevance of an image to a dialogue according to the label $y_k$, we use a scoring function, $s(x, x')$, which evaluates the similarity or relevance between two hidden inputs, and produces a numeric score. A threshold value, denoted as $\lambda$, helps us to determine the classification. Based on this setup, we define two categories:
 
