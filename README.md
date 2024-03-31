@@ -15,6 +15,9 @@ This repo contains the materials for multi-modal OOD detection.
 │   └───  b.ipynb            <- Notebook b
 │   
 ├─── models                  <- Trained and serialized models, model predictions, or model summaries
+├─── literatures             <- Contains all literatures for OOD detection
+├─── figures                 <- Contains all figures used for this project
+├─── utils                   <- Contains all util functions for this project
 └─── reports                 <- Generated analysis / reports 
 ```
 
