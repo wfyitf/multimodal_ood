@@ -45,7 +45,7 @@ Given a dataset with $((i_k, t_k), y_k)$ with $k = 1, 2, \cdots, n$ and the labe
 
 With the above definition, given an image-text data pair $(I^d, T^d)$, we are going to examine whether it is ID or OOD per image-dialogue in the given label set $\mathcal{Y}$. To this end, we draw the overall workflow in the figure below.
 
-![The workflow of dialogue OOD](figures/OOD_figure2.png "The workflow of dialogue OOD")
+![The workflow of dialogue OOD](figures/OOD_figure.pdf "The workflow of dialogue OOD")
 
 In the given scenario, we employ a strategy that leverages advanced vision models like CLIP to derive meaningful descriptors or feature embedding from images. Similarly, for dialogues, we extract pivotal descriptors using techniques such as semantic analysis and we also do a feature embedding for the dialogues. These processes yield embeddings $x_{i,k}$ for images and $x_{t,k}$ for dialogues. Utilizing these embeddings, we apply a scoring function $s(x_{i,k}, x_{t,k})$ to assess the relevance between an image and a dialogue. The outcome of this function helps us determine whether the image-dialogue pair falls within the in-distribution categories, indicating a high relevance, or the out-of-distribution category, suggesting low or no relevance.
 
