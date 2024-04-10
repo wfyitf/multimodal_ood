@@ -42,8 +42,7 @@ The mmd data structure will be as follows:
 │   │    ├─── train             <- train split
 │   │    ├─── sample            <- processed target dir
 ```
-
-2. **\[Dataset Generation\]** Then run the notebook `mmd_dataset_creation.ipynb` to create the Real OOD dataset. Then the dialogue and label data can be found under `dataset/mmd/sample/sample.json` and the corresponding images can be found under the directory `dataset/mmd/sample/images`.
+2. **\[Dataset Generation\]** Then run the notebook `mmd_dataset_creation.ipynb` to create the Real OOD dataset. Then the dialogue and label data can be found under `dataset/realmmd/sample.json` and the corresponding images can be found under the directory `dataset/realmmd/images`.
 
 
 ### QA Dataset Creation
