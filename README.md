@@ -49,18 +49,18 @@ The mmd data structure will be as follows:
 ### QA Dataset Creation
 1. \[Data Source:\] Download [0.9 version visdial dataset](https://visualdialog.org/data) and COCO2014 dataset(https://cocodataset.org/#home) and put them under `dataset/coco` and `dataset/visdial`, respectively. The COCO data structure will be looking like below:
 ```
-├─── dataset                    <- Main dataset folder
-│   ├─── coco                   <- COCO2014 Dataset
-│   │    ├─── coco_annotations  <- image annotations
-│   │    ├─── train2014         <- train images
-│   │    ├─── val2014           <- val images
+├─── dataset                    <- Main dataset dir
+│   ├─── coco                   <- COCO2014 Dataset dir
+│   │    ├─── coco_annotations  <- image annotations dir
+│   │    ├─── train2014         <- train images dir
+│   │    ├─── val2014           <- val images dir
 ```
 The visdial data structure will be as follows:
 ```
 ├─── dataset                            <- Main dataset folder
-│   ├─── visdial                        <- Visdial Dataset
-│   │    ├─── visdial_0.9_train.json    <- Training dialogue json
-│   │    ├─── visdial_0.9_val.json      <- Validation dialogue json
+│   ├─── visdial                        <- Visdial Dataset dir
+│   │    ├─── visdial_0.9_train.json    <- Training dialogue json file
+│   │    ├─── visdial_0.9_val.json      <- Validation dialogue json file
 ```
 2. \[Dataset Generation:\] Run the notebook `qa_dataset_creation.ipynb` with basic dev requirements. Then the dialogue and label data can be found under `dataset/qa/sample.json` and the corresponding images can be found under the directory `dataset/qa/images`.
 
