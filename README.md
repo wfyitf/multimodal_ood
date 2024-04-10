@@ -23,12 +23,46 @@ This repo contains the materials for multi-modal OOD detection.
 
 ## Notebook Running
 
-### Dataset Creation
-To create the datasets for QA and real OOD data, please follow the procedures listed below:
-1. \[For QA OOD data:\] Download [visdial dataset](https://visualdialog.org/data) and COCO2014 dataset(https://cocodataset.org/#home) and put them under `dataset/coco` and `dataset/visdial`, respectively.
-2. \[For Real OOD data:\] Download dataset from [MMD dataset](https://github.com/shh1574/multi-modal-dialogue-dataset/) with the [link](https://drive.google.com/drive/folders/12-Zz4MJTASJVlbncpSWvBVqLDe5_m5QU), also download COCO2014 dataset(https://cocodataset.org/#home) and put them under `dataset/mmd` and `dataset/coco`, respectively.
-3. \[For QA OOD data:\] Then run the notebook `qa_dataset_creation.ipynb` to create the QA dataset.
-4. \[For Real OOD data:\] Then run the notebook `mmd_dataset_creation.ipynb` to create the Real OOD dataset.
+### MMD Dataset Creation
+To create the datasets for real MMD OOD data, please follow the procedures listed below:
+1. \[Data Source:\] Download dataset from [MMD dataset](https://github.com/shh1574/multi-modal-dialogue-dataset/) with the [link](https://drive.google.com/drive/folders/12-Zz4MJTASJVlbncpSWvBVqLDe5_m5QU), also download COCO2014 dataset(https://cocodataset.org/#home) and put them under `dataset/mmd` and `dataset/coco`, respectively. The COCO data structure will be looking like below:
+```
+├─── dataset                    <- Main dataset folder
+│   ├─── coco                   <- COCO2014 Dataset
+│   │    ├─── coco_annotations  <- image annotations
+│   │    ├─── train2014         <- train images
+│   │    ├─── val2014           <- val images
+```
+The mmd data structure will be as follows:
+```
+├─── dataset                    <- Main dataset folder
+│   ├─── mmd                    <- MMD Dataset
+│   │    ├─── dev               <- validation split
+│   │    ├─── test              <- test split
+│   │    ├─── train             <- train split
+│   │    ├─── sample            <- processed target dir
+```
+
+2. \[For Real OOD data:\] Then run the notebook `mmd_dataset_creation.ipynb` to create the Real OOD dataset. Then the dialogue and label data can be found under `dataset/mmd/sample/sample.json` and the corresponding images can be found under the directory `dataset/mmd/sample/images`.
+
+
+### QA Dataset Creation
+1. \[Data Source:\] Download [0.9 version visdial dataset](https://visualdialog.org/data) and COCO2014 dataset(https://cocodataset.org/#home) and put them under `dataset/coco` and `dataset/visdial`, respectively. The COCO data structure will be looking like below:
+```
+├─── dataset                    <- Main dataset folder
+│   ├─── coco                   <- COCO2014 Dataset
+│   │    ├─── coco_annotations  <- image annotations
+│   │    ├─── train2014         <- train images
+│   │    ├─── val2014           <- val images
+```
+The visdial data structure will be as follows:
+```
+├─── dataset                            <- Main dataset folder
+│   ├─── visdial                        <- Visdial Dataset
+│   │    ├─── visdial_0.9_train.json    <- Training dialogue json
+│   │    ├─── visdial_0.9_val.json      <- Validation dialogue json
+```
+2. Run the notebook `qa_dataset_creation.ipynb` with basic dev requirements. Then the dialogue and label data can be found under `dataset/qa/sample.json` and the corresponding images can be found under the directory `dataset/qa/images`.
 
 ### Dataset Viewing
 To run the notebooks for examining the datasets, please follow the procedures listed below:
