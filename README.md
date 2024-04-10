@@ -43,7 +43,7 @@ The mmd data structure will be as follows:
 │   │    ├─── sample            <- processed target dir
 ```
 
-2. \[For Real OOD data:\] Then run the notebook `mmd_dataset_creation.ipynb` to create the Real OOD dataset. Then the dialogue and label data can be found under `dataset/mmd/sample/sample.json` and the corresponding images can be found under the directory `dataset/mmd/sample/images`.
+1. \[Dataset Generation:\] Then run the notebook `mmd_dataset_creation.ipynb` to create the Real OOD dataset. Then the dialogue and label data can be found under `dataset/mmd/sample/sample.json` and the corresponding images can be found under the directory `dataset/mmd/sample/images`.
 
 
 ### QA Dataset Creation
@@ -62,7 +62,7 @@ The visdial data structure will be as follows:
 │   │    ├─── visdial_0.9_train.json    <- Training dialogue json
 │   │    ├─── visdial_0.9_val.json      <- Validation dialogue json
 ```
-2. Run the notebook `qa_dataset_creation.ipynb` with basic dev requirements. Then the dialogue and label data can be found under `dataset/qa/sample.json` and the corresponding images can be found under the directory `dataset/qa/images`.
+2. \[Dataset Generation:\] Run the notebook `qa_dataset_creation.ipynb` with basic dev requirements. Then the dialogue and label data can be found under `dataset/qa/sample.json` and the corresponding images can be found under the directory `dataset/qa/images`.
 
 ### Dataset Viewing
 To run the notebooks for examining the datasets, please follow the procedures listed below:
