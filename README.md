@@ -1,4 +1,3 @@
-```
 
 # Multi-modal OOD Detection
 This repo contains the materials for multi-modal OOD detection.
@@ -157,4 +156,3 @@ One example pair is given below.
 ![Example pair of real mmd dataset](figures/example_real_mmd.png)
 
 
-```
