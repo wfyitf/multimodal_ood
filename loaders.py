@@ -93,7 +93,7 @@ class DataLoader:
             with torch.no_grad():
                 text_features = model.encode_text(text_tokens)
             cosine_sim = F.cosine_similarity(image_features, text_features)
-            print(categories + ' similarity: ' + str(cosine_sim.item()))
+            print(categories + ' CLIP feature similarity: ' + str(cosine_sim.item()))
             scores.append(cosine_sim.item())
         if verbose:
             print(f'True labels: {df_table.iloc[num]['supercategories']}')
@@ -118,4 +118,27 @@ class DataLoader:
             features_list.append(image_features)
 
         features_df = pd.DataFrame(features_list)  
+        self.save_clip_features(features_df)
         return features_df
+    
+    def save_clip_features(self, features_df):
+        if self.data_source == "qa":
+            features_df.to_json(self.data_dir / 'qa_clip_features.json', index=False)
+        elif self.data_source == "real":
+            features_df.to_json(self.data_dir / 'real_clip_features.json', index=False)
+        print('Features saved successfully')
+
+    def load_clip_features(self, df_table, model, preprocess, verbose = 0):
+        if self.data_source == "qa":
+            try:
+                return pd.read_json(self.data_dir / 'qa_clip_features.json')
+            except:
+                print('CLIP features not found, start encoding images')
+                return self.encode_images(df_table, preprocess, model, verbose)
+            
+        elif self.data_source == "real":
+            try:
+                return pd.read_json(self.data_dir / 'real_clip_features.json')
+            except:
+                print('CLIP features not found, start encoding images')
+                return self.encode_images(df_table, preprocess, model, verbose)
