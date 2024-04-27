@@ -20,3 +20,13 @@ venv/*
 *.json
 *.npy
 *.zip
+*.tar
+
+*.npy
+output/
+dataset/persona_stopwords/
+dataset/empathy_stopwords/
+dataset/dailydialog_stopwords/
+dataset/*.txt
+dataset/*.tar
+__pycache__/

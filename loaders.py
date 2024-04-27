@@ -99,15 +99,15 @@ class DataLoader:
             print(f'True labels: {df_table.iloc[num]['supercategories']}')
 
 
-    def encode_images(self, df_table, preprocess, model):
+    def encode_images(self, df_table, preprocess, model, verbose = 0):
         features_list = []
         if self.data_source == "qa":
-            df_table['image_id'] = df_table['image_id'].str.replace('COCO_train2014_', '').str.replace('.jpg', '')
-        elif self.data_source == "real":
-            df_table['image_id'] = df_table['image_id'].str.replace('.jpg', '')
+            df_table['image_id'] = df_table['image_id'].apply(lambda x: f"COCO_train2014_{int(x):012d}")
+        
+        iterator = tqdm(df_table.iterrows(), total=df_table.shape[0]) if verbose else df_table.iterrows()
 
-        for index, row in tqdm(df_table.iterrows()):
-            image_path = f"{self.data_image_dir}/{row['image_id']}"
+        for index, row in iterator:
+            image_path = f"{self.data_image_dir}/{row['image_id']}.jpg"
             image = Image.open(image_path)
             preprocessed_image = preprocess(image).unsqueeze(0).to(self.device)
 
