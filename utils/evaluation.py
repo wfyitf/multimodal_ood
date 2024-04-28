@@ -50,9 +50,9 @@ def fpr_evaluation(y_true, y_score, recall_level):
 
     sl = slice(last_ind, None, -1)
     recall, fps, tps, thresholds = np.r_[recall[sl], 0], np.r_[fps[sl], 0], np.r_[tps[sl], 0], thresholds[sl]
-    print(thresholds)
-    print(recall)
-    print(fps/(np.sum(np.logical_not(y_true))))
+    #print(thresholds)
+    #print(recall)
+    #print(fps/(np.sum(np.logical_not(y_true))))
     cutoff = np.argmin(np.abs(recall - recall_level))
     
     # Return the false positive rate at the desired recall level

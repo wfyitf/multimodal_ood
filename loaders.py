@@ -121,6 +121,24 @@ class DataLoader:
         self.save_clip_features(features_df)
         return features_df
     
+
+    def encode_dialogues(self, df_table, model, verbose = 0):
+        #TODO: check the possiblity
+        features_list = []
+        iterator = tqdm(df_table.iterrows(), total=df_table.shape[0]) if verbose else df_table.iterrows()
+
+        for index, row in iterator:
+            dialog = ' '.join(row['dialog_full'])
+            text_tokens = clip.tokenize([dialog]).to(self.device)
+            with torch.no_grad():
+                text_features = model.encode_text(text_tokens)
+                text_features = text_features.cpu().numpy().flatten()
+            features_list.append(text_features)
+
+        features_df = pd.DataFrame(features_list)  
+        self.save_clip_features(features_df)
+        return features_df
+
     def save_clip_features(self, features_df):
         if self.data_source == "qa":
             features_df.to_json(self.data_dir / 'qa_clip_features.json', index=False)
@@ -128,17 +146,32 @@ class DataLoader:
             features_df.to_json(self.data_dir / 'real_clip_features.json', index=False)
         print('Features saved successfully')
 
-    def load_clip_features(self, df_table, model, preprocess, verbose = 0):
+    def load_clip_image_features(self, df_table, model, preprocess, verbose = 0):
         if self.data_source == "qa":
             try:
-                return pd.read_json(self.data_dir / 'qa_clip_features.json')
+                return pd.read_json(self.data_dir / 'qa_clip_image_features.json')
             except:
                 print('CLIP features not found, start encoding images')
                 return self.encode_images(df_table, preprocess, model, verbose)
             
         elif self.data_source == "real":
             try:
-                return pd.read_json(self.data_dir / 'real_clip_features.json')
+                return pd.read_json(self.data_dir / 'real_clip_image_features.json')
             except:
                 print('CLIP features not found, start encoding images')
                 return self.encode_images(df_table, preprocess, model, verbose)
+            
+    def load_clip_dialogue_features(self, df_table, model, verbose = 0):
+        if self.data_source == "qa":
+            try:
+                return pd.read_json(self.data_dir / 'qa_clip_dialogue_features.json')
+            except:
+                print('CLIP features not found, start encoding dialogues')
+                return self.encode_dialogues(df_table, model, verbose)
+            
+        elif self.data_source == "real":
+            try:
+                return pd.read_json(self.data_dir / 'real_clip_dialogue_features.json')
+            except:
+                print('CLIP features not found, start encoding dialogues')
+                return self.encode_dialogues(df_table, model, verbose)
