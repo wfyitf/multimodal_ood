@@ -175,3 +175,5 @@ class DataLoader:
             except:
                 print('CLIP features not found, start encoding dialogues')
                 return self.encode_dialogues(df_table, model, verbose)
+            
+    
