@@ -12,7 +12,6 @@ import sys
 import random
 
 
-
 logger = logging.getLogger(__name__)
 class MultiLabelNN(nn.Module):
     def __init__(self, 
@@ -41,7 +40,7 @@ class MultiLabelNN(nn.Module):
 
 class model_loader:
     def __init__(self, 
-                 logger, 
+                 logger = logger, 
                  input_size=512, 
                  output_size=11, 
                  batch_size=32, 
