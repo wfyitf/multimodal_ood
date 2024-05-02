@@ -48,9 +48,10 @@ class model_loader:
                  num_epochs=20,
                  seed = 42
                  ):
-        
-        self.model = MultiLabelNN(logger, input_size, output_size)
+        self.input_size = input_size
+        self.output_size = output_size
         self.logger = logger
+        self.model = MultiLabelNN(self.logger, self.input_size, self.output_size)
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.num_epochs = num_epochs
@@ -96,6 +97,7 @@ class model_loader:
         """
         Compile the model with the optimizer and loss function
         """
+        self.model = MultiLabelNN(self.logger, self.input_size, self.output_size)
         self.optimizer = self.create_optimizer()
         self.loss_function = self.define_loss(None)
 
@@ -143,8 +145,24 @@ class model_loader:
                 self.optimizer.step()
 
             average_loss, average_accuracy = self.evaluate(train_loader, self.loss_function)
-            print(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}')
+            self.logger.info(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}')
 
+
+    def evaluate_on_test(self, X_test, Y_test, return_score = False, verbose = 1):
+        """
+        Evaluate the model on the test set
+        """
+        X_test_tensor = torch.tensor(X_test).float() 
+        Y_test_tensor = torch.tensor(Y_test).float()
+        dataset = TensorDataset(X_test_tensor, Y_test_tensor)
+        test_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)  
+        if return_score:
+            average_loss, average_accuracy, score_sum, score_max = self.evaluate(test_loader, self.loss_function, return_score = return_score)
+            self.logger.info(f'Test Loss: {average_loss:.4f}, Test Accuracy: {average_accuracy:.4f}')
+            return score_sum, score_max
+        else:
+            average_loss, average_accuracy = self.evaluate(test_loader, self.loss_function)
+            return None, None
 
     def evaluate(self, data_loader, loss_function, score = "energy", return_score = False):
         """
@@ -161,9 +179,9 @@ class model_loader:
         with torch.no_grad():  
             for inputs, labels in data_loader:
                 outputs = self.model(inputs)
-                if score == "energy":
+                if score == "energy" and return_score:
                     outputs_np = outputs.cpu().numpy()
-                    outputs_energy = -np.log(1+outputs_np/(1-outputs_np))
+                    outputs_energy = -np.log(1+outputs_np/(1.0000001-outputs_np))
                     score_sum.append(outputs_energy.sum(axis = 1))
                     score_max.append(outputs_energy.min(axis = 1))
 
