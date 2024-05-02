@@ -14,8 +14,10 @@ import clip
 from IPython.display import display
 from tqdm import tqdm
 
+
+logger = logging.getLogger(__name__)
 class DataLoader:
-    def __init__(self, data_source):
+    def __init__(self, data_source, logger = logger):
         if data_source == "qa":
             self.data_source = "qa"
             self.data_dir = constant.QA_DATA_DIR
@@ -24,6 +26,7 @@ class DataLoader:
             self.data_source = "real"
             self.data_dir = constant.REAL_DATA_DIR
         
+        self.logger = logger
         self.supercategories = constant.SUPERCATEGORIES
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.data_image_dir = self.data_dir / 'sample'
@@ -42,35 +45,35 @@ class DataLoader:
     def showing_example(self, num):
         df_table = self.load_dialogue_df()
         try:
-            print('Image ID:', df_table.iloc[num]['image_id'])
-            print('*'*50)
-            print('Categories:', df_table.iloc[num]['categories'])
-            print('Super Categories:', df_table.iloc[num]['supercategories'])
-            print('*'*50)
+            self.logger.info(f'Image ID:, {df_table.iloc[num]['image_id']}')
+            self.logger.info('*'*50)
+            self.logger.info(f'Categories: {df_table.iloc[num]['categories']}')
+            self.logger.info(f'Super Categories: {df_table.iloc[num]['supercategories']}')
+            self.logger.info('*'*50)
             if self.data_source == "qa":
-                print(df_table.iloc[num]['dialog_full'])
-                print('*'*50)
+                self.logger.info(f"{df_table.iloc[num]['dialog_full']}")
+                self.logger.info('*'*50)
                 self.plot_image(df_table.iloc[num]['caption'], 
                         f"{self.data_image_dir}/COCO_train2014_{df_table.iloc[num]['image_id']:0>12}.jpg")
             elif self.data_source == "real":
                 count = 0 
                 for i in df_table.iloc[num]['dialog']:
                     if count % 2 == 0:
-                        print('S1:', i)
+                        self.logger.info(f'S1: {i}')
                     else:
-                        print('S2:', i)
+                        self.logger.info(f'S2: {i}')
                     count += 1
-                print('*'*50)
+                self.logger.info('*'*50)
 
-                print('Similarity:', df_table.iloc[num]['score'])
-                print('*'*50)
+                self.logger.info(f"Similarity: {df_table.iloc[num]['score']}")
+                self.logger.info('*'*50)
                 self.plot_image(f"Image: {df_table.iloc[num]['image_id']}",
                             f"{self.data_image_dir}/{df_table.iloc[num]['image_id']}.jpg")
-                print('*'*50)
+                self.logger.info('*'*50)
             return True
         except Exception as e:
-            print(e)
-            print('Please provide a valid index')
+            self.logger.info(e)
+            self.logger.info('Please provide a valid index')
             return False 
         
     def show_clip_similarity(self, num, df_table, model, preprocess, verbose = 0):
@@ -93,10 +96,10 @@ class DataLoader:
             with torch.no_grad():
                 text_features = model.encode_text(text_tokens)
             cosine_sim = F.cosine_similarity(image_features, text_features)
-            print(categories + ' CLIP feature similarity: ' + str(cosine_sim.item()))
+            self.logger.info(categories + ' CLIP feature similarity: ' + str(cosine_sim.item()))
             scores.append(cosine_sim.item())
         if verbose:
-            print(f'True labels: {df_table.iloc[num]['supercategories']}')
+            self.logger.info(f'True labels: {df_table.iloc[num]['supercategories']}')
 
 
     def encode_images(self, df_table, preprocess, model, verbose = 0):
@@ -144,21 +147,21 @@ class DataLoader:
             features_df.to_json(self.data_dir / 'qa_clip_features.json', index=False)
         elif self.data_source == "real":
             features_df.to_json(self.data_dir / 'real_clip_features.json', index=False)
-        print('Features saved successfully')
+        self.logger.info('Features saved successfully')
 
     def load_clip_image_features(self, df_table, model, preprocess, verbose = 0):
         if self.data_source == "qa":
             try:
                 return pd.read_json(self.data_dir / 'qa_clip_image_features.json')
             except:
-                print('CLIP features not found, start encoding images')
+                self.logger.info('CLIP features not found, start encoding images')
                 return self.encode_images(df_table, preprocess, model, verbose)
             
         elif self.data_source == "real":
             try:
                 return pd.read_json(self.data_dir / 'real_clip_image_features.json')
             except:
-                print('CLIP features not found, start encoding images')
+                self.logger.info('CLIP features not found, start encoding images')
                 return self.encode_images(df_table, preprocess, model, verbose)
             
     def load_clip_dialogue_features(self, df_table, model, verbose = 0):
@@ -166,14 +169,14 @@ class DataLoader:
             try:
                 return pd.read_json(self.data_dir / 'qa_clip_dialogue_features.json')
             except:
-                print('CLIP features not found, start encoding dialogues')
+                self.logger.info('CLIP features not found, start encoding dialogues')
                 return self.encode_dialogues(df_table, model, verbose)
             
         elif self.data_source == "real":
             try:
                 return pd.read_json(self.data_dir / 'real_clip_dialogue_features.json')
             except:
-                print('CLIP features not found, start encoding dialogues')
+                self.logger.info('CLIP features not found, start encoding dialogues')
                 return self.encode_dialogues(df_table, model, verbose)
             
     

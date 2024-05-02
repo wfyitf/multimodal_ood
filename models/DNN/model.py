@@ -13,6 +13,7 @@ import random
 
 
 logger = logging.getLogger(__name__)
+
 class MultiLabelNN(nn.Module):
     def __init__(self, 
                  logger, 
@@ -36,8 +37,6 @@ class MultiLabelNN(nn.Module):
         return x
     
 
-
-
 class model_loader:
     def __init__(self, 
                  logger = logger, 
@@ -51,11 +50,13 @@ class model_loader:
                  ):
         
         self.model = MultiLabelNN(logger, input_size, output_size)
+        self.logger = logger
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.num_epochs = num_epochs
         self.proportion = proportion
         self.random_seed = seed
+        self.set_seed()
 
     def set_seed(self):
         """
@@ -78,9 +79,9 @@ class model_loader:
         Create an optimizer for the model
         """
         if customised_optimizer is None:
-            return optim.Adam(self.parameters(), lr=self.learning_rate)
+            return optim.Adam(self.model.parameters(), lr=self.learning_rate)
         else:
-            return customised_optimizer(self.parameters(), lr=self.learning_rate)
+            return customised_optimizer(self.model.parameters(), lr=self.learning_rate)
     
     def define_loss(self, loss):
         """
@@ -104,17 +105,26 @@ class model_loader:
         Create a dataset for the model
         """
         df_ind = df_table[df_table['OOD'] == 0]
-        df_ind_train = df_ind.sample(frac=0.8)
+        df_ind_train = df_ind.sample(frac=self.proportion)
         df_ind_train = df_ind_train.loc[np.sort(df_ind_train.index)]
         df_test = df_table.drop(df_ind_train.index)
+
+        X_train_image = np.stack(df_ind_train['image_clip'].values)
+        X_test_image = np.stack(df_test['image_clip'].values)
+        X_train_dialogue = np.stack(df_ind_train['dialogue_clip'].values)
+        X_test_dialogue = np.stack(df_test['dialogue_clip'].values)
+        Y_train = np.stack(df_ind_train['encoded_label'].values)
+        Y_test = np.stack(df_test['encoded_label'].values)
+
+        return df_ind_train, df_test, X_train_image, X_test_image, X_train_dialogue, X_test_dialogue, Y_train, Y_test
 
 
     def train_model(self, X_train, Y_train, verbose = 1):
         """
         Train the model
         """
-        X_train_tensor = torch.tensor(X_train.values).float() 
-        Y_train_tensor = torch.tensor(Y_train.values).float()
+        X_train_tensor = torch.tensor(X_train).float() 
+        Y_train_tensor = torch.tensor(Y_train).float()
         dataset = TensorDataset(X_train_tensor, Y_train_tensor)
         train_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)  
         self.compile_model()
@@ -132,32 +142,46 @@ class model_loader:
                 loss.backward()
                 self.optimizer.step()
 
-            average_loss, average_accuracy = self.evaluate(self.model, train_loader, self.loss_function)
+            average_loss, average_accuracy = self.evaluate(train_loader, self.loss_function)
             print(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}')
 
 
-    def evaluate(model, data_loader, loss_function):
+    def evaluate(self, data_loader, loss_function, score = "energy", return_score = False):
         """
         Evaluate the model
         """
-        model.eval()  
+        self.model.eval()  
         total_loss = 0
         total_accuracy = 0
         total_samples = 0
 
+        score_sum = []
+        score_max = []
+
         with torch.no_grad():  
             for inputs, labels in data_loader:
-                outputs = model(inputs)
+                outputs = self.model(inputs)
+                if score == "energy":
+                    outputs_np = outputs.cpu().numpy()
+                    outputs_energy = -np.log(1+outputs_np/(1-outputs_np))
+                    score_sum.append(outputs_energy.sum(axis = 1))
+                    score_max.append(outputs_energy.min(axis = 1))
+
                 loss = loss_function(outputs, labels)
                 total_loss += loss.item()
                 predictions = outputs > 0.5 
                 total_accuracy += (predictions == labels.byte()).all(dim=1).float().mean().item()
                 total_samples += 1
-
+            
         average_loss = total_loss / total_samples
         average_accuracy = total_accuracy / total_samples
 
-        return average_loss, average_accuracy
+        if return_score:
+            score_sum = np.concatenate(score_sum)
+            score_max = np.concatenate(score_max)
+            return average_loss, average_accuracy, score_sum, score_max
+        else:
+            return average_loss, average_accuracy
     
 
 
