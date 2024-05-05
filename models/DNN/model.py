@@ -184,9 +184,9 @@ class model_loader:
                 outputs = self.model(inputs)
                 if score == "energy" and return_score:
                     outputs_np = outputs.cpu().numpy()
-                    outputs_energy = -np.log(1+outputs_np/(1.0000001-outputs_np))
+                    outputs_energy = np.log(1+outputs_np/(1.0000001-outputs_np))
                     score_sum.append(outputs_energy.sum(axis = 1))
-                    score_max.append(outputs_energy.min(axis = 1))
+                    score_max.append(outputs_energy.max(axis = 1))
                 if score == "maxlogits" and return_score:
                     outputs_prob = outputs.cpu().numpy()
                     outputs_logits = np.log(outputs_prob/(1.0000001-outputs_prob))
