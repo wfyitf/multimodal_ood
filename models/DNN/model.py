@@ -148,7 +148,7 @@ class model_loader:
             self.logger.info(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}')
 
 
-    def evaluate_on_test(self, X_test, Y_test, return_score = False, verbose = 1):
+    def evaluate_on_test(self, X_test, Y_test, return_score = False, score_type = "energy", verbose = 1):
         """
         Evaluate the model on the test set
         """
@@ -157,7 +157,10 @@ class model_loader:
         dataset = TensorDataset(X_test_tensor, Y_test_tensor)
         test_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)  
         if return_score:
-            average_loss, average_accuracy, score_sum, score_max = self.evaluate(test_loader, self.loss_function, return_score = return_score)
+            average_loss, average_accuracy, score_sum, score_max = self.evaluate(test_loader, 
+                                                                                 self.loss_function, 
+                                                                                 score = score_type, 
+                                                                                 return_score = return_score)
             self.logger.info(f'Test Loss: {average_loss:.4f}, Test Accuracy: {average_accuracy:.4f}')
             return score_sum, score_max
         else:
@@ -184,6 +187,19 @@ class model_loader:
                     outputs_energy = -np.log(1+outputs_np/(1.0000001-outputs_np))
                     score_sum.append(outputs_energy.sum(axis = 1))
                     score_max.append(outputs_energy.min(axis = 1))
+                if score == "maxlogits" and return_score:
+                    outputs_prob = outputs.cpu().numpy()
+                    outputs_logits = np.log(outputs_prob/(1.0000001-outputs_prob))
+                    score_max.append(outputs_logits.max(axis = 1))
+                if score == "msp" and return_score:
+                    outputs_prob = outputs.cpu().numpy()
+                    outputs_logits = np.log(outputs_prob/(1.0000001-outputs_prob))
+                    outputs_softmax = np.exp(outputs_logits)/np.exp(outputs_logits).sum(axis = 1)[:, None]
+                    score_max.append(outputs_softmax.max(axis = 1))
+                if score == "mp" and return_score:
+                    outputs_prob = outputs.cpu().numpy()
+                    score_max.append(outputs_prob.max(axis = 1))
+                
 
                 loss = loss_function(outputs, labels)
                 total_loss += loss.item()
@@ -194,10 +210,13 @@ class model_loader:
         average_loss = total_loss / total_samples
         average_accuracy = total_accuracy / total_samples
 
-        if return_score:
+        if return_score and score == "energy":
             score_sum = np.concatenate(score_sum)
             score_max = np.concatenate(score_max)
             return average_loss, average_accuracy, score_sum, score_max
+        elif return_score and score in ["maxlogits", "msp", "mp"]:
+            score_max = np.concatenate(score_max)
+            return average_loss, average_accuracy, None, score_max
         else:
             return average_loss, average_accuracy
     
