@@ -57,3 +57,39 @@ def fpr_evaluation(y_true, y_score, recall_level):
     
     # Return the false positive rate at the desired recall level
     return fps[cutoff] / (np.sum(np.logical_not(y_true))) 
+
+def auroc_evaluation(y_true, y_score):
+    """
+    Parameters
+    ----------
+    y_true : array-like
+        True binary labels
+    y_score : array-like
+        Target scores, 
+        can either be probability estimates of the positive class, 
+        confidence values, or non-thresholded measure of decisions
+    
+    """
+
+    from sklearn.metrics import roc_auc_score
+
+    auroc = roc_auc_score(y_true, y_score)
+    return auroc
+
+
+def aupr_evaluation(y_true, y_score):
+    """
+    Parameters
+    ----------
+    y_true : array-like
+        True binary labels
+    y_score : array-like
+        Target scores, 
+        can either be probability estimates of the positive class, 
+        confidence values, or non-thresholded measure of decisions
+    
+    """
+    from sklearn.metrics import average_precision_score
+
+    aupr = average_precision_score(y_true, y_score)
+    return aupr
