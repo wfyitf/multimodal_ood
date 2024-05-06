@@ -32,7 +32,7 @@ class DataLoader:
         self.data_image_dir = self.data_dir / 'sample'
 
     def load_dialogue_df(self):
-        data_path = self.data_dir / 'sample.json'
+        data_path = self.data_dir / 'CLIP' / 'qa_dialogs_truncate' / 'qa.json'
         return pd.read_json(data_path)
 
     def plot_image(self, caption, image_path):
