@@ -22,10 +22,11 @@ class MultiLabelNN(nn.Module):
                  ):
         
         super(MultiLabelNN, self).__init__()
-        self.fc1 = nn.Linear(input_size, 256) 
-        self.fc2 = nn.Linear(256, 128) 
-        self.fc3 = nn.Linear(128, 64) 
-        self.fc4 = nn.Linear(64, output_size)    
+        self.fc1 = nn.Linear(input_size, 512) 
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, 128) 
+        self.fc4 = nn.Linear(128, 64) 
+        self.fc5 = nn.Linear(64, output_size)    
         self.relu = nn.ReLU()           
         self.sigmoid = nn.Sigmoid()    
 
@@ -33,7 +34,8 @@ class MultiLabelNN(nn.Module):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         x = self.relu(self.fc3(x))
-        x = self.sigmoid(self.fc4(x))  
+        x = self.relu(self.fc4(x))
+        x = self.sigmoid(self.fc5(x))  
         return x
     
 
@@ -106,7 +108,7 @@ class model_loader:
         """
         Create a dataset for the model
         """
-        df_ind = df_table[df_table['OOD'] == 0]
+        df_ind = df_table[df_table['OOD'] == 1]
         df_ind_train = df_ind.sample(frac=self.proportion)
         df_ind_train = df_ind_train.loc[np.sort(df_ind_train.index)]
         df_test = df_table.drop(df_ind_train.index)
@@ -121,7 +123,7 @@ class model_loader:
         return df_ind_train, df_test, X_train_image, X_test_image, X_train_dialogue, X_test_dialogue, Y_train, Y_test
 
 
-    def train_model(self, X_train, Y_train, verbose = 1):
+    def train_model(self, X_train, Y_train, X_test = None, Y_test = None, verbose = 1):
         """
         Train the model
         """
@@ -130,6 +132,13 @@ class model_loader:
         dataset = TensorDataset(X_train_tensor, Y_train_tensor)
         train_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)  
         self.compile_model()
+
+        if X_test is not None and Y_test is not None:
+            X_test_tensor = torch.tensor(X_test).float()
+            Y_test_tensor = torch.tensor(Y_test).float()
+            test_dataset = TensorDataset(X_test_tensor, Y_test_tensor)
+            test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
+
 
         if verbose == 1:
             iterator = tqdm(range(self.num_epochs))
@@ -145,7 +154,11 @@ class model_loader:
                 self.optimizer.step()
 
             average_loss, average_accuracy = self.evaluate(train_loader, self.loss_function)
-            self.logger.info(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}')
+            test_loss, test_accuracy = self.evaluate(test_loader, self.loss_function) if X_test is not None and Y_test is not None else (None, None)
+            if X_test is not None and Y_test is not None:
+                self.logger.info(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
+            else:
+                self.logger.info(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}')
 
 
     def evaluate_on_test(self, X_test, Y_test, return_score = False, score_type = "energy", verbose = 1):
