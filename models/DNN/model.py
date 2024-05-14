@@ -200,9 +200,10 @@ class model_loader:
                     outputs_energy = np.log(1+outputs_np/(1.0000001-outputs_np))
                     score_sum.append(outputs_energy.sum(axis = 1))
                     score_max.append(outputs_energy.max(axis = 1))
-                if score == "maxlogits" and return_score:
+                if score == "logits" and return_score:
                     outputs_prob = outputs.cpu().numpy()
                     outputs_logits = np.log(outputs_prob/(1.0000001-outputs_prob))
+                    score_sum.append(outputs_logits.sum(axis = 1))
                     score_max.append(outputs_logits.max(axis = 1))
                 if score == "msp" and return_score:
                     outputs_prob = outputs.cpu().numpy()
@@ -223,11 +224,11 @@ class model_loader:
         average_loss = total_loss / total_samples
         average_accuracy = total_accuracy / total_samples
 
-        if return_score and score == "energy":
+        if return_score and score in ["energy","logits"]:
             score_sum = np.concatenate(score_sum)
             score_max = np.concatenate(score_max)
             return average_loss, average_accuracy, score_sum, score_max
-        elif return_score and score in ["maxlogits", "msp", "mp"]:
+        elif return_score and score in ["msp", "mp"]:
             score_max = np.concatenate(score_max)
             return average_loss, average_accuracy, None, score_max
         else:
