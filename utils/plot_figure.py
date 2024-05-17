@@ -61,6 +61,8 @@ def plot_score_distribution(df_test, score_type, type, fpr, mode, save_fig = Fal
         score_name = "Softmax Probability"
     elif score_type == "entropy":
         score_name = "Entropy"
+    elif score_type == "energy":
+        score_name = "Energy"
     elif score_type == "logits":
         score_name = "Logits"
     
