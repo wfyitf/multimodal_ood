@@ -48,7 +48,8 @@ class model_loader:
                  learning_rate=0.001, 
                  proportion = 0.8,
                  num_epochs=20,
-                 seed = 42
+                 seed = 42,
+                 type = "image"
                  ):
         self.input_size = input_size
         self.output_size = output_size
@@ -59,8 +60,11 @@ class model_loader:
         self.num_epochs = num_epochs
         self.proportion = proportion
         self.random_seed = seed
+        self.type = type
         self.set_seed()
-        self.model_path = Path(__file__) / 'models' / 'DNN' 
+        self.model_path = Path(__file__).parent / 'models' / 'DNN' 
+        if not self.model_path.exists():
+            self.model_path.mkdir(parents=True, exist_ok=True)
 
     def set_seed(self):
         """
@@ -149,7 +153,7 @@ class model_loader:
         """
         Load the model
         """
-        path = self.model_path / f'model_{ood_category}.pth'
+        path = self.model_path / f'{self.type}_model_{ood_category}_{self.num_epochs}_{self.learning_rate}.pth'
         self.model.load_state_dict(torch.load(path))
         self.logger.info(f'Model loaded from {path}')
 
@@ -193,7 +197,7 @@ class model_loader:
                 self.logger.info(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}')
 
         if save_model:
-            path = self.model_path / f'model_{ood_category}.pth'
+            path = self.model_path / f'{self.type}_model_{ood_category}_{self.num_epochs}_{self.learning_rate}.pth'
             torch.save(self.model.state_dict(), path)
             self.logger.info(f'Model saved at {path}')
 
