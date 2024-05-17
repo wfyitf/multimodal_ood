@@ -10,7 +10,7 @@ from tqdm import tqdm
 import io
 import sys
 import random
-
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +60,7 @@ class model_loader:
         self.proportion = proportion
         self.random_seed = seed
         self.set_seed()
+        self.model_path = Path(__file__) / 'models' / 'DNN' 
 
     def set_seed(self):
         """
@@ -144,7 +145,15 @@ class model_loader:
         return df_ind_train, df_test, X_train_image, X_test_image, X_train_dialogue, X_test_dialogue, Y_train, Y_test
 
 
-    def train_model(self, X_train, Y_train, X_test = None, Y_test = None, verbose = 1):
+    def load_model(self, ood_category = []):
+        """
+        Load the model
+        """
+        path = self.model_path / f'model_{ood_category}.pth'
+        self.model.load_state_dict(torch.load(path))
+        self.logger.info(f'Model loaded from {path}')
+
+    def train_model(self, X_train, Y_train, X_test = None, Y_test = None, verbose = 1, ood_category = [], save_model = True, retrain = True):
         """
         Train the model
         """
@@ -152,7 +161,8 @@ class model_loader:
         Y_train_tensor = torch.tensor(Y_train).float()
         dataset = TensorDataset(X_train_tensor, Y_train_tensor)
         train_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)  
-        self.compile_model()
+        if retrain:
+            self.compile_model()
 
         if X_test is not None and Y_test is not None:
             X_test_tensor = torch.tensor(X_test).float()
@@ -165,6 +175,7 @@ class model_loader:
             iterator = tqdm(range(self.num_epochs))
         else:
             iterator = range(self.num_epochs)
+
 
         for epoch in iterator:
             for inputs, labels in train_loader:
@@ -181,6 +192,10 @@ class model_loader:
             else:
                 self.logger.info(f'Epoch {epoch+1}, Train Loss: {average_loss:.4f}, Train Accuracy: {average_accuracy:.4f}')
 
+        if save_model:
+            path = self.model_path / f'model_{ood_category}.pth'
+            torch.save(self.model.state_dict(), path)
+            self.logger.info(f'Model saved at {path}')
 
     def evaluate_on_test(self, X_test, Y_test, return_score = False, score_type = "energy", verbose = 1):
         """

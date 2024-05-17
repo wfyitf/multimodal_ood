@@ -52,7 +52,20 @@ def plot_score_distribution(df_test, score_type, type, fpr, mode, save_fig = Fal
 
     sns.histplot(non_ood_scores, bins=80, alpha=0.5, label='ID', kde=True, color='blue',stat="density")
     sns.histplot(ood_scores, bins=80, alpha=0.5, label='OOD', kde=True, color='red', stat="density")
-    plt.title('Energy Distribution')
+    
+    if score_type == 'cosine':
+        score_name = 'Cosine'
+    elif score_type == "mp":
+        score_name = "Probability"
+    elif score_type == "msp":
+        score_name = "Softmax Probability"
+    elif score_type == "entropy":
+        score_name = "Entropy"
+    elif score_type == "logits":
+        score_name = "Logits"
+    
+
+    plt.title(f'{mode.title()} {score_name} Distribution')
     plt.xlabel(f'{mode.title()} {type.title()} Score')
     plt.ylabel('Probability Density')
     hist_id, bins_id = np.histogram(non_ood_scores, bins=80, density=True)
