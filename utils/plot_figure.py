@@ -43,9 +43,12 @@ def plot_cosine(df_table, save_fig = False, save_format = 'png', dpi = 300):
 
 def plot_score_distribution(df_test, score_type, type, fpr, mode, save_fig = False, save_format = 'png', dpi = 300, include_fpr = True, show_plot = True):
     
-    if mode != 'overall':
+    if mode not in ['overall', 'overall_transform']:
         ood_scores = df_test[df_test['OOD'] == 0][f'{score_type}_{type}_{mode}']
         non_ood_scores = df_test[df_test['OOD'] == 1][f'{score_type}_{type}_{mode}']
+    elif mode == "overall_transform":
+        ood_scores = df_test[df_test['OOD'] == 0][f'{score_type}_overall_simialrity_{type}_transform']
+        non_ood_scores = df_test[df_test['OOD'] == 1][f'{score_type}_overall_simialrity_{type}_transform']
     else:
         ood_scores = df_test[df_test['OOD'] == 0][f'{score_type}_{mode}_simialrity_{type}']
         non_ood_scores = df_test[df_test['OOD'] == 1][f'{score_type}_{mode}_simialrity_{type}']
@@ -55,7 +58,7 @@ def plot_score_distribution(df_test, score_type, type, fpr, mode, save_fig = Fal
     
     if score_type == 'cosine':
         score_name = 'Cosine'
-    elif score_type == "mp":
+    elif score_type == "prob":
         score_name = "Probability"
     elif score_type == "msp":
         score_name = "Softmax Probability"
@@ -65,8 +68,11 @@ def plot_score_distribution(df_test, score_type, type, fpr, mode, save_fig = Fal
         score_name = "Energy"
     elif score_type == "logits":
         score_name = "Logits"
+    elif score_type == "odin":
+        score_name = "ODIN"
+    elif score_type == "mahalanobis":
+        score_name = "Mahalanobis"
     
-
     plt.title(f'{mode.title()} {score_name} Distribution')
     plt.xlabel(f'{mode.title()} {type.title()} Score')
     plt.ylabel('Probability Density')

@@ -201,7 +201,7 @@ class model_loader:
             torch.save(self.model.state_dict(), path)
             self.logger.info(f'Model saved at {path}')
 
-    def evaluate_on_test(self, X_test, Y_test, return_score = False, score_type = "energy", verbose = 1):
+    def evaluate_on_test(self, X_test, Y_test, return_score = False, score_type = "energy", verbose = 1, X_train = None, Y_train = None):
         """
         Evaluate the model on the test set
         """
@@ -210,7 +210,14 @@ class model_loader:
         dataset = TensorDataset(X_test_tensor, Y_test_tensor)
         test_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)  
         if return_score:
-            average_loss, average_accuracy, score_sum, score_max = self.evaluate(test_loader, 
+            if score_type == "mahalanobis":
+                average_loss, average_accuracy, score_sum, score_max = self.evaluate(test_loader, 
+                                                                                 self.loss_function, 
+                                                                                 score = score_type, 
+                                                                                 return_score = return_score,
+                                                                                 data = [X_train, X_test, Y_train, Y_test])                
+            else:
+                average_loss, average_accuracy, score_sum, score_max = self.evaluate(test_loader, 
                                                                                  self.loss_function, 
                                                                                  score = score_type, 
                                                                                  return_score = return_score)
@@ -220,7 +227,8 @@ class model_loader:
             average_loss, average_accuracy = self.evaluate(test_loader, self.loss_function)
             return None, None
 
-    def evaluate(self, data_loader, loss_function, score = "energy", return_score = False):
+
+    def evaluate(self, data_loader, loss_function, score = "energy", return_score = False, data = None):
         """
         Evaluate the model
         """
@@ -231,48 +239,115 @@ class model_loader:
 
         score_sum = []
         score_max = []
-
-        with torch.no_grad():  
-            for inputs, labels in data_loader:
-                outputs = self.model(inputs)
-                if score == "energy" and return_score:
+        features_mahala_score = []
+        
+        for inputs, labels in data_loader:
+            outputs = self.model(inputs)
+            if score == "energy" and return_score:
+                with torch.no_grad():
                     outputs_np = outputs.cpu().numpy()
-                    outputs_energy = np.log(1+outputs_np/(1.0000001-outputs_np))
-                    score_sum.append(outputs_energy.sum(axis = 1))
-                    score_max.append(outputs_energy.max(axis = 1))
-                if score == "logits" and return_score:
+                outputs_energy = np.log(1+outputs_np/(1.0000001-outputs_np))
+                score_sum.append(outputs_energy.sum(axis = 1))
+                score_max.append(outputs_energy.max(axis = 1))
+            if score == "logits" and return_score:
+                with torch.no_grad():
                     outputs_prob = outputs.cpu().numpy()
-                    outputs_logits = np.log(outputs_prob/(1.0000001-outputs_prob))
-                    score_sum.append(outputs_logits.sum(axis = 1))
-                    score_max.append(outputs_logits.max(axis = 1))
-                if score == "msp" and return_score:
+                outputs_logits = np.log(outputs_prob/(1.0000001-outputs_prob))
+                score_sum.append(outputs_logits.sum(axis = 1))
+                score_max.append(outputs_logits.max(axis = 1))
+            if score == "msp" and return_score:
+                with torch.no_grad():
                     outputs_prob = outputs.cpu().numpy()
-                    outputs_logits = np.log(outputs_prob/(1.0000001-outputs_prob))
-                    outputs_softmax = np.exp(outputs_logits)/np.exp(outputs_logits).sum(axis = 1)[:, None]
-                    score_max.append(outputs_softmax.max(axis = 1))
-                if score == "mp" and return_score:
+                outputs_logits = np.log(outputs_prob/(1.0000001-outputs_prob))
+                outputs_softmax = np.exp(outputs_logits)/np.exp(outputs_logits).sum(axis = 1)[:, None]
+                score_max.append(outputs_softmax.max(axis = 1))
+            if score == "prob" and return_score:
+                with torch.no_grad():
                     outputs_prob = outputs.cpu().numpy()
-                    score_max.append(outputs_prob.max(axis = 1))
-                
-
-                loss = loss_function(outputs, labels)
-                total_loss += loss.item()
-                predictions = outputs > 0.5 
-                total_accuracy += (predictions == labels.byte()).all(dim=1).float().mean().item()
-                total_samples += 1
+                score_max.append(outputs_prob.max(axis = 1))
+                score_sum.append(outputs_prob.sum(axis = 1))
+            if score == "odin" and return_score:
+                outputs_prob = self.odin_score(inputs, 0.001, 1)
+                outputs_prob = outputs_prob.detach().numpy()
+                score_max.append(outputs_prob.max(axis = 1))
+                score_sum.append(outputs_prob.sum(axis = 1))
             
+
+            loss = loss_function(outputs, labels)
+            total_loss += loss.item()
+            predictions = outputs > 0.5 
+            total_accuracy += (predictions == labels.byte()).all(dim=1).float().mean().item()
+            total_samples += 1
+        
+        if score == "mahalanobis" and return_score:
+            X_train = data[0]
+            X_test = data[1]
+            Y_train = data[2]
+            Y_test = data[3]
+            output_score = self.mahalanobis_score(X_train, X_test, Y_train, Y_test)
+            score_max.append(-output_score.min(axis = 1))
+            score_sum.append(-output_score.sum(axis = 1))
+            
+        
         average_loss = total_loss / total_samples
         average_accuracy = total_accuracy / total_samples
 
-        if return_score and score in ["energy","logits"]:
+        if return_score and score in ["energy","logits","prob", "odin", "mahalanobis"]:
             score_sum = np.concatenate(score_sum)
             score_max = np.concatenate(score_max)
             return average_loss, average_accuracy, score_sum, score_max
-        elif return_score and score in ["msp", "mp"]:
+        elif return_score and score in ["msp"]:
             score_max = np.concatenate(score_max)
             return average_loss, average_accuracy, None, score_max
         else:
             return average_loss, average_accuracy
     
 
+    def odin_score(self, input, epsilon, temperature):
 
+        input.requires_grad = True
+        outputs = self.model(input)
+        outputs = torch.log(outputs/(1.0000001-outputs))
+        outputs = F.sigmoid(outputs / temperature)
+        labels = torch.round(outputs)
+        loss = nn.BCELoss()(outputs, labels)
+        loss.backward()
+        perturbation = epsilon * input.grad.sign()
+        perturbed_input = input + perturbation
+        outputs = self.model(perturbed_input)
+        outputs = torch.log(outputs/(1.0000001-outputs))
+        outputs = F.sigmoid(outputs / temperature)
+        self.model.zero_grad()
+        return outputs
+    
+    def mahalanobis_score(self, X_train, X_test, Y_train, Y_test):
+        """
+        Calculate the Mahalanobis score
+        """
+        X_train_tensor = torch.tensor(X_train).float() 
+        Y_train_tensor = torch.tensor(Y_train).float()
+        dataset = TensorDataset(X_train_tensor, Y_train_tensor)
+        train_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)  
+
+        X_test_tensor = torch.tensor(X_test).float() 
+        Y_test_tensor = torch.tensor(Y_test).float()
+        dataset = TensorDataset(X_test_tensor, Y_test_tensor)
+        test_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)  
+
+        self.model.eval()
+        features_mahala_score = []
+        for inputs, labels in train_loader:
+            outputs = self.model(inputs)
+            features_mahala_score.append(outputs.detach().numpy())
+        features_mahala_score = np.concatenate(features_mahala_score)
+        mean = features_mahala_score.mean(axis = 0)
+        cov = np.cov(features_mahala_score, rowvar=False)
+        inv_cov = np.linalg.inv(cov)
+
+        mahala_score = []
+        for inputs, labels in test_loader:
+            outputs = self.model(inputs)
+            mahala_score.append((outputs.detach().numpy() - mean) @ inv_cov * (outputs.detach().numpy() - mean))
+        mahala_score = np.concatenate(mahala_score)
+        self.logger.info(f'Mahalanobis score calculated with shape {mahala_score.shape}')
+        return mahala_score
