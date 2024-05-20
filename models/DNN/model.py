@@ -320,34 +320,26 @@ class model_loader:
         self.model.zero_grad()
         return outputs
     
+
     def mahalanobis_score(self, X_train, X_test, Y_train, Y_test):
         """
         Calculate the Mahalanobis score
         """
-        X_train_tensor = torch.tensor(X_train).float() 
-        Y_train_tensor = torch.tensor(Y_train).float()
-        dataset = TensorDataset(X_train_tensor, Y_train_tensor)
-        train_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)  
 
-        X_test_tensor = torch.tensor(X_test).float() 
-        Y_test_tensor = torch.tensor(Y_test).float()
-        dataset = TensorDataset(X_test_tensor, Y_test_tensor)
-        test_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)  
+        num_classes = Y_train.shape[1]
+        num_features = X_train.shape[1]
+        
+        mean_list = np.zeros((num_classes, num_features))
+        cov_list = np.zeros((num_classes, num_features, num_features))
+        
+        for i in range(num_classes):
+            X_train_class = X_train[Y_train[:, i] == 1]
+            mean_list[i] = X_train_class.mean(axis=0)
+            cov_list[i] = np.cov(X_train_class, rowvar=False)
+            
+        inv_cov_list = np.linalg.inv(cov_list + np.eye(num_features) * 1e-6) 
 
-        self.model.eval()
-        features_mahala_score = []
-        for inputs, labels in train_loader:
-            outputs = self.model(inputs)
-            features_mahala_score.append(outputs.detach().numpy())
-        features_mahala_score = np.concatenate(features_mahala_score)
-        mean = features_mahala_score.mean(axis = 0)
-        cov = np.cov(features_mahala_score, rowvar=False)
-        inv_cov = np.linalg.inv(cov)
-
-        mahala_score = []
-        for inputs, labels in test_loader:
-            outputs = self.model(inputs)
-            mahala_score.append((outputs.detach().numpy() - mean) @ inv_cov * (outputs.detach().numpy() - mean))
-        mahala_score = np.concatenate(mahala_score)
-        self.logger.info(f'Mahalanobis score calculated with shape {mahala_score.shape}')
-        return mahala_score
+        diff = X_test[:, np.newaxis, :] - mean_list 
+        mahalanobis_distances = np.einsum('ijk,jkl,ijl->ij', diff, inv_cov_list, diff)
+        
+        return mahalanobis_distances
