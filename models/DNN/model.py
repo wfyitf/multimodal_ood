@@ -109,7 +109,7 @@ class model_loader:
         self.loss_function = self.define_loss(None)
 
 
-    def create_dataset(self, data_loader, df_table, add_mismatch = False, mismatch_num = 10000):
+    def create_dataset(self, data_loader, df_table, add_mismatch = False, mismatch_num = 10000, used_model = "clip"):
         """
         Create a dataset for the model
         """
@@ -127,22 +127,22 @@ class model_loader:
 
             df_sample['dialog'] = df_dialogue_sample['dialog']
             df_sample['dialog_full'] = df_dialogue_sample['dialog_full']
-            df_sample['dialogue_clip'] = df_dialogue_sample['dialogue_clip']
+            df_sample[f'dialogue_{used_model}'] = df_dialogue_sample[f'dialogue_{used_model}']
             df_sample['dialogue_score'] = df_dialogue_sample['dialogue_score']
             df_sample['dialogue_score_max'] = df_dialogue_sample['dialogue_score_max']
             df_sample['OOD'] = 0
 
 
-        X_train_image = np.stack(df_ind_train['image_clip'].values)
-        X_test_image = np.stack(df_test['image_clip'].values)
-        X_train_dialogue = np.stack(df_ind_train['dialogue_clip'].values)
-        X_test_dialogue = np.stack(df_test['dialogue_clip'].values)
+        X_train_image = np.stack(df_ind_train[f'image_{used_model}'].values)
+        X_test_image = np.stack(df_test[f'image_{used_model}'].values)
+        X_train_dialogue = np.stack(df_ind_train[f'dialogue_{used_model}'].values)
+        X_test_dialogue = np.stack(df_test[f'dialogue_{used_model}'].values)
         Y_train = np.stack(df_ind_train['encoded_label'].values)
         Y_test = np.stack(df_test['encoded_label'].values)
 
         if add_mismatch:
-            X_test_image = np.concatenate([X_test_image, np.stack(df_sample['image_clip'].values)])
-            X_test_dialogue = np.concatenate([X_test_dialogue, np.stack(df_sample['dialogue_clip'].values)])
+            X_test_image = np.concatenate([X_test_image, np.stack(df_sample[f'image_{used_model}'].values)])
+            X_test_dialogue = np.concatenate([X_test_dialogue, np.stack(df_sample[f'dialogue_{used_model}'].values)])
             Y_test = np.concatenate([Y_test, np.stack(df_sample['encoded_label'].values)])
             df_test = pd.concat([df_test, df_sample], ignore_index=True)
 

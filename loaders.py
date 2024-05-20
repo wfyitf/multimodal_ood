@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 class DataLoader:
-    def __init__(self, data_source, logger = logger):
+    def __init__(self, data_source, model_type = "clip", logger = logger):
         if data_source == "qa":
             self.data_source = "qa"
             self.data_dir = constant.QA_DATA_DIR
@@ -26,6 +26,7 @@ class DataLoader:
             self.data_source = "real"
             self.data_dir = constant.REAL_DATA_DIR
         
+        self.model_type = model_type
         self.logger = logger
         self.supercategories = constant.SUPERCATEGORIES
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -35,8 +36,12 @@ class DataLoader:
         if self.data_source == "real":
             data_path = self.data_dir / 'sample.json'
         elif self.data_source == "qa":
-            data_path = self.data_dir / 'CLIP' / 'qa_dialogs_truncate' / 'qa.json'
-        return pd.read_json(data_path)
+            if self.model_type == "clip":
+                data_path = self.data_dir / 'CLIP' / 'qa_dialogs_truncate' / 'qa.json'
+                return pd.read_json(data_path)
+            elif self.model_type == "blip":
+                data_path = self.data_dir / 'BLIP' / 'qa_dialog' / 'qa_blip_dialog_feature.npy'
+                return np.load(data_path, allow_pickle=True)
 
     def plot_image(self, caption, image_path):
         img = mpimg.imread(image_path)
