@@ -21,7 +21,8 @@ venv/*
 *.npy
 *.zip
 *.tar
-
+*.pth
+*.pt
 *.npy
 output/
 dataset/persona_stopwords/
