@@ -20,3 +20,5 @@ venv/*
 *.json
 *.npy
 *.zip
+*.pdf
+*.png

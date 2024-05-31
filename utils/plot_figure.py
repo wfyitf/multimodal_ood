@@ -53,9 +53,10 @@ def plot_score_distribution(df_test, score_type, type, fpr, mode, save_fig = Fal
         ood_scores = df_test[df_test['OOD'] == 0][f'{score_type}_{mode}_simialrity_{type}']
         non_ood_scores = df_test[df_test['OOD'] == 1][f'{score_type}_{mode}_simialrity_{type}']
 
-    sns.histplot(non_ood_scores, bins=80, alpha=0.5, label='ID', kde=True, color='blue',stat="density")
-    sns.histplot(ood_scores, bins=80, alpha=0.5, label='OOD', kde=True, color='red', stat="density")
-    
+    plt.figure(figsize=(8, 6))
+    sns.kdeplot(non_ood_scores, shade=True, color='blue', alpha=0.5, label='In Distribution')
+    sns.kdeplot(ood_scores, shade=True, color='red', alpha=0.5, label='Out of Distribution')
+
     if score_type == 'cosine':
         score_name = 'Cosine'
     elif score_type == "prob":
@@ -72,10 +73,21 @@ def plot_score_distribution(df_test, score_type, type, fpr, mode, save_fig = Fal
         score_name = "ODIN"
     elif score_type == "mahalanobis":
         score_name = "Mahalanobis"
-    
-    plt.title(f'{mode.title()} {score_name} Distribution')
-    plt.xlabel(f'{mode.title()} {type.title()} Score')
-    plt.ylabel('Probability Density')
+
+    if mode == "image_tranform":
+        x_label = f'Image {type.title()} Score with $s(x_I, x_T)$'
+    elif mode == "overall_transform":
+        x_label = f'$g(s, s_T, s_I)$'
+    else:
+        x_label = f'{mode.title()} {type.title()} Score'
+
+
+    #plt.title(f'{mode.title()} {score_name} Distribution', fontsize=20)
+
+    plt.xlabel(x_label, fontsize=35)
+    plt.ylabel('Probability Density', fontsize=35)
+    plt.xticks(fontsize=25)
+    plt.yticks(fontsize=25)
     hist_id, bins_id = np.histogram(non_ood_scores, bins=80, density=True)
     cumulative_id = np.cumsum(hist_id * np.diff(bins_id))
     threshold_index_id = np.where(cumulative_id >= (1 - fpr/100))[0][0]
@@ -89,8 +101,7 @@ def plot_score_distribution(df_test, score_type, type, fpr, mode, save_fig = Fal
         plt.axvline(x=threshold_value_id, color='green', linestyle='--', label=f'{fpr}\% Recall at {threshold_value_id:.2f}')
         plt.axvline(x=threshold_value_id, color='purple', linestyle=':', label=f'FPR{fpr} with {(1 - cumulative_probability_ood):.2f}')
 
-    plt.legend()
-    plt.show()
+    plt.legend(fontsize=30)
     if save_fig:
         save_path_final = save_path + f'/score_distribution_{score_type}_{type}_{mode}.' + save_format
         plt.savefig(save_path_final, dpi=dpi, bbox_inches='tight')
@@ -200,16 +211,15 @@ def plot_joint_distribution(df_test, score_type, type, mode, id = True, color = 
 
 def plot_example_label(save_fig = False, save_format = 'png', dpi = 300, show_plot = True):
     categories = ['Dog', 'Cat', 'Car', 'Kitchen', 'Bedroom']
-    ind_bars = [0.1, 0.9, 0.1, 0.2, 0.3]
-    ood_bars_1 = [0.1, 0.1, 0.2, 0.1, 0.1]
-    ood_bars_2 = [0.15, 0.10, 0.15, 0.13, 0.18]
-    # ind_bars = [0.3, 0.8, 0.1, 0.25, 0.3]
-    # ood_bars_1 = [0.2, 0.75, 0.05, 0.2, 0.7]
-    # ood_bars_2 = [0.1, 0.1, 0.2, 0.1, 0.1]
+    # ind_bars = [0.1, 0.9, 0.1, 0.2, 0.3]
+    # ood_bars_1 = [0.1, 0.1, 0.2, 0.1, 0.1]
+    # ood_bars_2 = [0.15, 0.10, 0.15, 0.13, 0.18]
+    ind_bars = [0.3, 0.8, 0.1, 0.25, 0.3]
+    ood_bars_1 = [0.2, 0.75, 0.05, 0.2, 0.7]
+    ood_bars_2 = [0.1, 0.1, 0.2, 0.1, 0.1]
     x = np.arange(len(categories))
     width = 0.25
-
-    fig, ax = plt.subplots(figsize=(10, 4), dpi=200)
+    fig, ax = plt.subplots(figsize=(10, 4), dpi=300)
 
 
     rects1 = ax.bar(x - width, ind_bars, width, label='Example 1', color='blue', alpha=0.8, edgecolor='darkblue')
@@ -220,7 +230,7 @@ def plot_example_label(save_fig = False, save_format = 'png', dpi = 300, show_pl
         spine.set_visible(False)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(categories, rotation=45, ha='right', fontsize=30)
+    ax.set_xticklabels(categories, rotation=45, ha='right', fontsize=35, fontweight='bold')
     ax.tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
 
     max_ind_index = ind_bars.index(max(ind_bars))
@@ -238,7 +248,7 @@ def plot_example_label(save_fig = False, save_format = 'png', dpi = 300, show_pl
 
     ax.legend(fontsize=20, loc='upper center', bbox_to_anchor=(0.5, 1.2), ncol=3)
     if save_fig:
-        save_path_final = save_path + '/example_label.' + save_format
+        save_path_final = save_path + '/example_label_2.' + save_format
         plt.savefig(save_path_final, dpi=dpi, bbox_inches='tight')
 
     plt.show()
