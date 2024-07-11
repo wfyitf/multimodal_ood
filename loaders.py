@@ -13,7 +13,7 @@ import torch
 import clip
 from IPython.display import display
 from tqdm import tqdm
-
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 class DataLoader:
@@ -25,14 +25,21 @@ class DataLoader:
         elif data_source == "real":
             self.data_source = "real"
             self.data_dir = constant.REAL_DATA_DIR
+
+        elif data_source == "meld":
+            self.data_source = "meld"
+            self.data_dir = constant.MELD_DATA_DIR
         
         self.model_type = model_type
         self.logger = logger
-        self.supercategories = constant.SUPERCATEGORIES
+        if data_source == "qa":
+            self.supercategories = constant.SUPERCATEGORIES
+        elif data_source == "meld":
+            self.supercategories = constant.MELD_CATEGORIES
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.data_image_dir = self.data_dir / 'sample'
 
-    def load_dialogue_df(self):
+    def load_dialogue_df(self, split: Optional[str] = 'train'):
         if self.data_source == "real":
             data_path = self.data_dir / 'sample.json'
         elif self.data_source == "qa":
@@ -42,6 +49,48 @@ class DataLoader:
             elif self.model_type == "blip":
                 data_path = self.data_dir / 'BLIP' / 'qa_dialog' / 'qa_blip_dialog_feature.npy'
                 return np.load(data_path, allow_pickle=True)
+            
+        elif self.data_source == "meld":
+            if self.model_type == 'clip':
+                data_path = self.data_dir / 'CLIP' / f'{split}_text_features.npy'
+                return np.load(data_path, allow_pickle=True)
+            elif self.model_type == 'blip':
+                data_path = self.data_dir / 'BLIP' / f'{split}_text_features.npy'
+                return np.load(data_path, allow_pickle=True)
+            
+    def load_image_df(self, split: Optional[str] = 'train'):
+        if self.data_source == "real":
+            data_path = self.data_dir / 'sample.json'
+        elif self.data_source == "qa":
+            if self.model_type == "clip":
+                data_path = self.data_dir / 'CLIP' / 'qa_images' / 'qa.json'
+                return pd.read_json(data_path)
+            elif self.model_type == "blip":
+                data_path = self.data_dir / 'BLIP' / 'qa_image' / 'qa_blip_image_feature.npy'
+                return np.load(data_path, allow_pickle=True)
+        
+        elif self.data_source == "meld":
+            if self.model_type == 'clip':
+                data_path = self.data_dir / 'CLIP' / f'{split}_img_features.npy'
+                return np.load(data_path, allow_pickle=True)
+            elif self.model_type == 'blip':
+                data_path = self.data_dir / 'BLIP' / f'{split}_img_features.npy'
+                return np.load(data_path, allow_pickle=True)
+
+    def load_annotations_df(self, split: Optional[str] = 'train'):
+        if self.data_source == "real":
+            data_path = self.data_dir / 'sample.json'
+        elif self.data_source == "qa":
+            if self.model_type == "clip":
+                data_path = self.data_dir / 'CLIP' / 'qa_annotations' / 'qa.json'
+                return pd.read_json(data_path)
+            elif self.model_type == "blip":
+                data_path = self.data_dir / 'BLIP' / 'qa_annotations' / 'qa_blip_annotations.npy'
+                return np.load(data_path, allow_pickle=True)
+        
+        elif self.data_source == "meld":
+            data_path = self.data_dir /  f'clean_{split}.json'
+            return pd.read_json(data_path)
 
     def plot_image(self, caption, image_path):
         img = mpimg.imread(image_path)
