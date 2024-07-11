@@ -119,18 +119,30 @@ class model_loader:
         df_test = df_table.drop(df_ind_train.index)
 
         if add_mismatch:
-            df_sample = df_table.sample(n = mismatch_num, random_state=42).reset_index(drop=True)
-            df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=24).reset_index(drop=True)
+            if data_loader.data_source == "qa":
+                df_sample = df_table.sample(n = mismatch_num, random_state=42).reset_index(drop=True)
+                df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=24).reset_index(drop=True)
 
-            while any(df_sample['image_id'] == df_dialogue_sample['image_id']):
-                df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=np.random.randint(0, 10000)).reset_index(drop=True)
+                while any(df_sample['image_id'] == df_dialogue_sample['image_id']):
+                    df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=np.random.randint(0, 10000)).reset_index(drop=True)
 
-            df_sample['dialog'] = df_dialogue_sample['dialog']
-            df_sample['dialog_full'] = df_dialogue_sample['dialog_full']
-            df_sample[f'dialogue_{used_model}'] = df_dialogue_sample[f'dialogue_{used_model}']
-            df_sample['dialogue_score'] = df_dialogue_sample['dialogue_score']
-            df_sample['dialogue_score_max'] = df_dialogue_sample['dialogue_score_max']
-            df_sample['OOD'] = 0
+                df_sample['dialog'] = df_dialogue_sample['dialog']
+                df_sample['dialog_full'] = df_dialogue_sample['dialog_full']
+                df_sample[f'dialogue_{used_model}'] = df_dialogue_sample[f'dialogue_{used_model}']
+                df_sample['dialogue_score'] = df_dialogue_sample['dialogue_score']
+                df_sample['dialogue_score_max'] = df_dialogue_sample['dialogue_score_max']
+                df_sample['OOD'] = 0
+
+            elif data_loader.data_source == "meld":
+                df_sample = df_table.sample(n = mismatch_num, random_state=42).reset_index(drop=True)
+                df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=24).reset_index(drop=True)
+
+                while any(df_sample['image_id'] == df_dialogue_sample['image_id']):
+                    df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=np.random.randint(0, 10000)).reset_index(drop=True)
+
+                df_sample['utterance'] = df_dialogue_sample['utterance']
+                df_sample[f'dialogue_{used_model}'] = df_dialogue_sample[f'dialogue_{used_model}']
+                df_sample['OOD'] = 0
 
 
         X_train_image = np.stack(df_ind_train[f'image_{used_model}'].values)
