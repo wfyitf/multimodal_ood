@@ -129,8 +129,6 @@ class model_loader:
                 df_sample['dialog'] = df_dialogue_sample['dialog']
                 df_sample['dialog_full'] = df_dialogue_sample['dialog_full']
                 df_sample[f'dialogue_{used_model}'] = df_dialogue_sample[f'dialogue_{used_model}']
-                df_sample['dialogue_score'] = df_dialogue_sample['dialogue_score']
-                df_sample['dialogue_score_max'] = df_dialogue_sample['dialogue_score_max']
                 df_sample['OOD'] = 0
 
             elif data_loader.data_source == "meld":
