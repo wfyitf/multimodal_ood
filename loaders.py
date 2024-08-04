@@ -32,7 +32,7 @@ class DataLoader:
         
         self.model_type = model_type
         self.logger = logger
-        if data_source == "qa":
+        if data_source in ["qa", "real"]:
             self.supercategories = constant.SUPERCATEGORIES
         elif data_source == "meld":
             self.supercategories = constant.MELD_CATEGORIES
@@ -47,7 +47,7 @@ class DataLoader:
                 data_path = self.data_dir / 'CLIP' / 'qa_dialogs_truncate' / 'qa.json'
                 return pd.read_json(data_path)
             elif self.model_type == "blip":
-                data_path = self.data_dir / 'BLIP' / 'qa_dialog' / 'qa_blip_dialog_feature.npy'
+                data_path = self.data_dir / 'BLIP' / 'qa_dialogs' / 'qa_blip_dialog_feature.npy'
                 return np.load(data_path, allow_pickle=True)
             
         elif self.data_source == "meld":
@@ -81,16 +81,10 @@ class DataLoader:
         if self.data_source == "real":
             data_path = self.data_dir / 'sample.json'
         elif self.data_source == "qa":
-            if self.model_type == "clip":
-                data_path = self.data_dir / 'CLIP' / 'qa_annotations' / 'qa.json'
-                return pd.read_json(data_path)
-            elif self.model_type == "blip":
-                data_path = self.data_dir / 'BLIP' / 'qa_annotations' / 'qa_blip_annotations.npy'
-                return np.load(data_path, allow_pickle=True)
-        
+            data_path = self.data_dir / 'qa.json'
         elif self.data_source == "meld":
             data_path = self.data_dir /  f'clean_{split}.json'
-            return pd.read_json(data_path)
+        return pd.read_json(data_path)
 
     def plot_image(self, caption, image_path):
         img = mpimg.imread(image_path)

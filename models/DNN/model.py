@@ -131,6 +131,17 @@ class model_loader:
                 df_sample[f'dialogue_{used_model}'] = df_dialogue_sample[f'dialogue_{used_model}']
                 df_sample['OOD'] = 0
 
+            elif data_loader.data_source == "real":
+                df_sample = df_table.sample(n = mismatch_num, random_state=42).reset_index(drop=True)
+                df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=24).reset_index(drop=True)
+
+                while any(df_sample['image_id'] == df_dialogue_sample['image_id']):
+                    df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=np.random.randint(0, 10000)).reset_index(drop=True)
+
+                df_sample['dialog'] = df_dialogue_sample['dialog']
+                df_sample[f'dialogue_{used_model}'] = df_dialogue_sample[f'dialogue_{used_model}']
+                df_sample['OOD'] = 0
+
             elif data_loader.data_source == "meld":
                 df_sample = df_table.sample(n = mismatch_num, random_state=42).reset_index(drop=True)
                 df_dialogue_sample = df_table.sample(n = mismatch_num, random_state=24).reset_index(drop=True)
@@ -302,7 +313,7 @@ class model_loader:
         average_loss = total_loss / total_samples
         average_accuracy = total_accuracy / total_samples
 
-        if return_score and score in ["energy","logits","prob", "odin", "mahalanobis"]:
+        if return_score and score in ["energy", "logits", "prob", "odin", "mahalanobis"]:
             score_sum = np.concatenate(score_sum)
             score_max = np.concatenate(score_max)
             return average_loss, average_accuracy, score_sum, score_max
